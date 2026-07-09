@@ -1,0 +1,33 @@
+# Minimal OTel Collector pipeline: receives OTLP from the gateway/worker and
+# fans out to a logging exporter locally. Swap/extend the `exporters` +
+# `pipelines` sections to forward to Langfuse, Jaeger, Datadog, etc. without
+# touching any application code (see TraceExporter interface).
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+exporters:
+  debug:
+    verbosity: basic
+  prometheus:
+    endpoint: 0.0.0.0:8889
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus, debug]
