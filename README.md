@@ -1,14 +1,51 @@
 # LLMOps Gateway & Observability Platform
 
-A production-grade, async gateway that sits between client applications and upstream LLM providers (OpenAI, Anthropic) to cache, monitor, optimize, and audit every request.
+**Async multi-tenant LLM gateway** — dual-layer semantic caching, OpenAI/Anthropic failover, per-request cost & tracing, API-key auth, rate limiting. **127+ tests**, Dockerized, arq workers.
+
+[![Release](https://img.shields.io/badge/release-v1.0.0--beta.1-blue)](docs/RELEASE_v1.0.0-beta.1.md)
+
+## At a glance
+
+```mermaid
+flowchart LR
+  Client["Client app"] --> GW["FastAPI Gateway"]
+  GW --> Auth["Auth + Rate limit"]
+  Auth --> Cache{"Dual cache"}
+  Cache -->|exact| Redis[(Redis)]
+  Cache -->|semantic| Qdrant[(Qdrant)]
+  Cache -->|miss| Router["RoutingService"]
+  Router --> OpenAI["OpenAI"]
+  Router --> Anthropic["Anthropic"]
+  GW --> Workers["arq workers"]
+  Workers --> PG[(PostgreSQL)]
+  GW --> OTel["OTel / Prometheus"]
+```
+
+| Capability | Details |
+|------------|---------|
+| **Caching** | Redis exact-match + Qdrant semantic (cosine ≥ 0.95), tenant-scoped |
+| **Resilience** | Circuit breakers, backoff, cross-provider fallback |
+| **Security** | Peppered API keys, scopes, per-tenant token-bucket limits |
+| **Observability** | Traces, token usage, cost attribution → Postgres + OTel |
+| **Ops** | Readiness probes, migrate-on-start, admin APIs |
+
+## Documentation
+
+| Doc | Purpose |
+|-----|---------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Full technical reference (Phases 1–8) |
+| [DEMO.md](docs/DEMO.md) | Record a 2-minute recruiter demo |
+| [DESIGN_DECISIONS.md](docs/DESIGN_DECISIONS.md) | ADRs + interview Q&A |
+| [RESUME_BULLETS.md](docs/RESUME_BULLETS.md) | Resume & LinkedIn copy |
+| [BENCHMARKS.md](docs/BENCHMARKS.md) | Performance numbers (run locally) |
+| [PRODUCTION_ROADMAP.md](docs/PRODUCTION_ROADMAP.md) | Honest gaps & next steps |
+| [RELEASE_v1.0.0-beta.1.md](docs/RELEASE_v1.0.0-beta.1.md) | Release notes |
 
 ## Architectural Pillars
 
 1. **Asynchronous Gateway Engine** — non-blocking FastAPI core, pooled connections, dynamic provider fallback, automatic retry under 429s.
 2. **Dual-Layer Semantic Caching** — Redis for exact-match, Qdrant for cosine-similarity semantic matching (threshold-gated, pluggable embedding backend).
 3. **Observability, Cost Tracking & Tracing** — async span capture (tokens, pricing, latency) exported via OpenTelemetry/Langfuse-compatible pipelines, without blocking the request path.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full technical reference (Phases 1–8).
 
 ## Stack
 
@@ -53,6 +90,32 @@ Run the test suite:
 ```bash
 make test
 ```
+
+## Demo (5 minutes)
+
+```bash
+make up
+make demo          # health, auth, cache miss/hit, rate limit
+```
+
+Walkthrough for recording: [docs/DEMO.md](docs/DEMO.md). Dev API key: `llmops_dev_default_key` (`X-API-Key` header).
+
+## Benchmarks
+
+Run against a live stack with provider keys configured:
+
+```bash
+make benchmark     # or: python scripts/benchmark_gateway.py --requests 20
+```
+
+Paste results into [docs/BENCHMARKS.md](docs/BENCHMARKS.md) and [RESUME_BULLETS.md](docs/RESUME_BULLETS.md).
+
+| Metric | Value |
+|--------|-------|
+| Requests | _run `make benchmark`_ |
+| Cache hit ratio | _run benchmark_ |
+| Latency p50 / p95 | _run benchmark_ |
+| Environment | local Docker, `gpt-4o-mini` |
 
 ## Status
 

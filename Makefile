@@ -1,4 +1,4 @@
-.PHONY: install dev up down logs migrate migration lint test worker
+.PHONY: install dev up down logs migrate migration lint test worker demo benchmark
 
 install:
 	pip install -e ".[dev]"
@@ -33,3 +33,9 @@ lint:
 
 test:
 	pytest
+
+demo:
+	bash scripts/demo.sh
+
+benchmark:
+	python scripts/benchmark_gateway.py --requests 20
