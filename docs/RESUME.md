@@ -6,12 +6,25 @@ Gurgaon, India · hansitvarshney@gmail.com · +91 9205256900 · [LinkedIn](https
 
 ## EDUCATION
 
-**Sushant University** · Gurgaon, India · *May 2026*  
+**Sushant University** · Gurgaon, India · *2022 – May 2026*  
 B.Tech, Computer Science Engineering (AI & ML) · Minor in Artificial Intelligence  
 Relevant coursework: Deep Learning, NLP, Predictive Modeling, Data Structures & Algorithms
 
+**Queen's University** · Kingston, ON · *2019 – 2021*  
+Computer Science coursework toward BSc (studies discontinued)
+
 **Scottish High International School** · Gurgaon, India  
-CBSE Class XII · 90% (2019) · Class X · 93% (2017)
+CBSE Class XII · 90% (2019) · Class X · 93% (2017) · Honour Roll (2015–2019)
+
+---
+
+## LEADERSHIP & SERVICE
+
+**Scottish High International School** · *2016 – 2019*  
+- Founded the **Engineering Club**; organized inter-school MUNs (30+ schools), hackathons, and science quizzes; represented school in **International Olympiads** (Math & Science); **Sports Captain** (2018–2019)
+
+**Volunteer** · *2015 – 2020*  
+- **BFW School for the Blind** — led fundraising and converted textbooks to audio for visually impaired students · **QHacks 2020** — registration and Microsoft workshop setup
 
 ---
 
@@ -41,8 +54,7 @@ CBSE Class XII · 90% (2019) · Class X · 93% (2017)
 *Python, FastAPI, Next.js, LangGraph, Google Gemini, SQLite, Railway*
 
 - Built a full-stack EPC command center bridging on-site engineering schedules and client billing tranches with decoupled progress vs. payment-milestone data models
-- Orchestrated a **LangGraph** multi-agent pipeline for multimodal site-data ingestion (Gemini Flash), Pydantic validation, and dynamic Excel integration
-- Delivered cash-flow auditing dashboard with uninvoiced work-value tracking; deployed for live use at SKIC Pvt. Ltd.
+- Orchestrated a **LangGraph** multi-agent pipeline for multimodal site-data ingestion (Gemini Flash), Pydantic validation, and dynamic Excel integration; deployed for live use at SKIC Pvt. Ltd.
 
 **LLMOps Gateway & Observability Platform** · [GitHub](https://github.com/hansitvarshney/llmops-gateway) · *Jul 2026*  
 *Python, FastAPI, Redis, Qdrant, PostgreSQL, OpenTelemetry, Docker, arq*
@@ -58,14 +70,13 @@ CBSE Class XII · 90% (2019) · Class X · 93% (2017)
 
 **Academic ML Portfolio** · *Coursework*
 
-- **IMDB Sentiment (GRU):** NLP classifier with custom tokenization and sequence modeling · **Face CNN (LFW):** 7-class image classifier
-- **Credit Card Fraud:** Isolation Forest on imbalanced data (fraud recall focus) · **Fashion MNIST:** ~88% accuracy neural classifier
+- **IMDB Sentiment (GRU), Face CNN (LFW), Credit Card Fraud (Isolation Forest), Fashion MNIST (~88%)**
 
 ---
 
 ## TECHNICAL SKILLS
 
-**Languages:** Python, SQL, TypeScript  
+**Languages:** Python, Java, SQL, TypeScript  
 **ML & AI:** TensorFlow, Keras, Scikit-learn, Pandas, NumPy, LangGraph, RAG, GraphRAG, Gemini, OpenAI  
 **Backend & Data:** FastAPI, SQLAlchemy, Redis, PostgreSQL, Neo4j, Qdrant, Docker, OpenTelemetry, pytest  
 **Frontend:** Next.js, React, Tailwind CSS, Streamlit

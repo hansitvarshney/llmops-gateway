@@ -14,7 +14,7 @@ MARGIN_L = 11
 MARGIN_R = 11
 MARGIN_T = 10
 MARGIN_B = 10
-LINE = 4.0
+LINE = 3.8
 BULLET_INDENT = 8
 
 
@@ -100,15 +100,27 @@ def build_pdf() -> ResumePDF:
 
   # ---- Education (first for new grad — Jake's convention) ----
   pdf.section("Education")
-  pdf.two_col_row("Sushant University", "Gurgaon, India  |  May 2026")
+  pdf.two_col_row("Sushant University", "Gurgaon, India  |  2022 - May 2026")
   pdf.subtitle("B.Tech, Computer Science Engineering (AI & ML); Minor in Artificial Intelligence")
   pdf.body(
     "Relevant coursework: Deep Learning, NLP, Predictive Modeling, Data Structures & Algorithms",
     size=8.8,
   )
   pdf.ln(0.5)
+  pdf.two_col_row("Queen's University", "Kingston, ON  |  2019 - 2021")
+  pdf.body("Computer Science coursework toward BSc (studies discontinued)", size=8.8)
+  pdf.ln(0.5)
   pdf.two_col_row("Scottish High International School", "Gurgaon, India")
-  pdf.body("CBSE Class XII: 90% (2019)  |  Class X: 93% (2017)", size=8.8)
+  pdf.body("CBSE Class XII: 90% (2019)  |  Class X: 93% (2017)  |  Honour Roll (2015-2019)", size=8.8)
+
+  # ---- Leadership & Service ----
+  pdf.section("Leadership & Service")
+  pdf.bullets(
+    [
+      "Scottish High (2016-2019): Founded Engineering Club; organized inter-school MUNs (30+ schools), hackathons, and science quizzes; Intl. Olympiads (Math & Science); Sports Captain.",
+      "BFW School for the Blind: led fundraising and audiobook conversion for visually impaired students. QHacks 2020: registration and Microsoft workshop support.",
+    ]
+  )
 
   # ---- Experience ----
   pdf.section("Experience")
@@ -120,7 +132,7 @@ def build_pdf() -> ResumePDF:
       "Gathered requirements from project managers and site teams; translated Excel/WhatsApp field workflows into structured, automated reporting pipelines.",
     ]
   )
-  pdf.ln(0.8)
+  pdf.ln(0.5)
 
   pdf.two_col_row("upGrad x Uber (MentorMind)", "Remote  |  Jun 2024 - Jul 2024")
   pdf.subtitle("Mentor-Led Data Science Program  |  Certified by upGrad Education Pvt. Ltd.")
@@ -147,11 +159,10 @@ def build_pdf() -> ResumePDF:
   pdf.bullets(
     [
       "Built a full-stack EPC command center bridging on-site engineering schedules and client billing tranches with decoupled progress vs. payment-milestone data models.",
-      "Orchestrated a LangGraph multi-agent pipeline for multimodal site-data ingestion (Gemini Flash), Pydantic validation, and dynamic Excel integration.",
-      "Delivered cash-flow auditing dashboard with uninvoiced work-value tracking; deployed for live use at SKIC Pvt. Ltd.",
+      "Orchestrated a LangGraph multi-agent pipeline for multimodal site-data ingestion (Gemini Flash), Pydantic validation, and dynamic Excel integration; deployed for live use at SKIC Pvt. Ltd.",
     ]
   )
-  pdf.ln(0.8)
+  pdf.ln(0.5)
 
   pdf.two_col_row("LLMOps Gateway & Observability Platform", "Jul 2026")
   pdf.tech_line("Python, FastAPI, Redis, Qdrant, PostgreSQL, OpenTelemetry, Docker, arq")
@@ -162,7 +173,7 @@ def build_pdf() -> ResumePDF:
       "Shipped multi-tenant API-key auth, per-tenant rate limiting, Postgres trace persistence, and background workers; 127+ unit tests, Dockerized production stack.",
     ]
   )
-  pdf.ln(0.8)
+  pdf.ln(0.5)
 
   pdf.two_col_row("AEVAR - GraphRAG Financial Audit Pipeline", "Jun 2026")
   pdf.tech_line("Python, Neo4j, Pydantic, Google Gemini, Streamlit")
@@ -173,20 +184,18 @@ def build_pdf() -> ResumePDF:
       "Deployed schema-constrained Gemini agent producing typed executive risk briefings (fraud exposure, risk score, remediation actions).",
     ]
   )
-  pdf.ln(0.8)
+  pdf.ln(0.5)
 
   pdf.two_col_row("Academic ML Portfolio", "Coursework")
   pdf.bullets(
     [
-      "IMDB Sentiment (GRU): NLP classifier with custom tokenization and sequence modeling.",
-      "Face CNN (LFW): 7-class image classifier  |  Credit Card Fraud: Isolation Forest on imbalanced data.",
-      "Fashion MNIST: neural classifier achieving ~88% accuracy with training and prediction visualizations.",
+      "IMDB Sentiment (GRU), Face CNN (LFW), Credit Card Fraud (Isolation Forest), Fashion MNIST (~88%).",
     ]
   )
 
   # ---- Technical Skills (last — Jake's convention) ----
   pdf.section("Technical Skills")
-  pdf.body("Languages: Python, SQL, TypeScript", size=8.8)
+  pdf.body("Languages: Python, Java, SQL, TypeScript", size=8.8)
   pdf.body(
     "ML & AI: TensorFlow, Keras, Scikit-learn, Pandas, NumPy, LangGraph, RAG, GraphRAG, Gemini, OpenAI",
     size=8.8,
