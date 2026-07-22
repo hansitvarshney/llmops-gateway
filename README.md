@@ -2,7 +2,7 @@
 
 **Async multi-tenant LLM gateway** — dual-layer semantic caching, OpenAI/Anthropic failover, per-request cost & tracing, API-key auth, rate limiting. **127+ tests**, Dockerized, arq workers.
 
-[![Release](https://img.shields.io/badge/release-v1.0.0--beta.1-blue)](docs/RELEASE_v1.0.0-beta.1.md)
+[![Release](https://img.shields.io/badge/release-v1.0.0--beta.1-blue)](docs/RELEASE_v1.0.0-beta.1.md) · [Resume (PDF)](docs/Hansit_Varshney_Resume.pdf)
 
 ## At a glance
 
@@ -159,3 +159,7 @@ Paste results into [docs/BENCHMARKS.md](docs/BENCHMARKS.md) and [RESUME_BULLETS.
   - API key list/revoke (`GET/DELETE /v1/admin/api-keys`)
 
 Known gap: streaming client disconnect mid-response is not traced (see `GatewayService` module docstring). `provider_health` and `cache_entries_meta` tables exist but are not yet written at runtime.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

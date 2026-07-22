@@ -16,6 +16,7 @@ htmlcov/
 
 .DS_Store
 *.log
+docs/~$*.docx
 
 dist/
 build/
