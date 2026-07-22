@@ -55,6 +55,13 @@ async def create_chat_completion(
         response.headers["X-Trace-Id"] = result.trace_id
         response.headers["X-Cache-Status"] = result.cache_status.value
         response.headers["X-Request-Cost"] = f"{result.cost_usd:.6f}"
+        if result.adapter_id:
+            response.headers["X-Adapter-Id"] = result.adapter_id
+        if result.model_alias:
+            response.headers["X-Model-Alias"] = result.model_alias
+            response.headers["X-Base-Model"] = result.model
+        if result.adapter_stage:
+            response.headers["X-Adapter-Stage"] = result.adapter_stage
         return result
 
     async def _sse() -> AsyncIterator[bytes]:
@@ -66,6 +73,9 @@ async def create_chat_completion(
                     "usage": item.response.usage.model_dump(),
                     "cost_usd": item.response.cost_usd,
                     "cache_status": item.response.cache_status.value,
+                    "adapter_id": item.response.adapter_id,
+                    "model_alias": item.response.model_alias,
+                    "base_model": item.response.model,
                 }
             else:
                 event = {"choices": [{"delta": {"content": item}}]}

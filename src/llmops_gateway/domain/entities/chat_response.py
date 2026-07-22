@@ -28,3 +28,6 @@ class ChatResponse(BaseModel):
     trace_id: str
     created_at: datetime
     latency_ms: float
+    adapter_id: str | None = None
+    model_alias: str | None = None
+    adapter_stage: str | None = None

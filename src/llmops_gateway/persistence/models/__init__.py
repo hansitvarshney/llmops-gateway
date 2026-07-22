@@ -2,6 +2,7 @@
 `Base.metadata` in a single place.
 """
 
+from llmops_gateway.persistence.models.adapter_route import AdapterRouteModel
 from llmops_gateway.persistence.models.api_key import ApiKeyModel
 from llmops_gateway.persistence.models.base import Base
 from llmops_gateway.persistence.models.cache_entry_meta import CacheEntryMetaModel
@@ -22,4 +23,5 @@ __all__ = [
     "TokenUsageModel",
     "ProviderHealthModel",
     "CacheEntryMetaModel",
+    "AdapterRouteModel",
 ]

@@ -9,7 +9,7 @@ I/O at import time.
 from enum import StrEnum
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -69,6 +69,18 @@ class Settings(BaseSettings):
     # --- Upstream LLM providers ---
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
+
+    @field_validator("openai_api_key", "anthropic_api_key", mode="before")
+    @classmethod
+    def normalize_optional_api_key(cls, value: object) -> str | None:
+        """Treat blank env values as unset and strip Docker/.env quote wrappers."""
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value  # type: ignore[return-value]
+        normalized = value.strip().strip('"').strip("'")
+        return normalized or None
+
     provider_fallback_chain: list[str] = Field(
         default_factory=lambda: ["openai", "anthropic"],
         description="Ordered provider names tried on failure/429/timeout.",

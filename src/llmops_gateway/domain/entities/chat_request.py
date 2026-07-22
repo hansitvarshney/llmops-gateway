@@ -33,6 +33,18 @@ class ChatRequest(BaseModel):
     provider_override: str | None = Field(
         default=None, description="Force a specific provider instead of the fallback chain."
     )
+    adapter_id: str | None = Field(
+        default=None,
+        description="LoRA adapter id resolved from adapter_routes (set by gateway).",
+    )
+    model_alias: str | None = Field(
+        default=None,
+        description="Original client model string before adapter remap.",
+    )
+    adapter_stage: str | None = Field(
+        default=None,
+        description="Preferred adapter route stage (default Production).",
+    )
 
     def canonical_prompt(self) -> str:
         """Deterministic text representation used for cache-key hashing and embedding."""
@@ -40,4 +52,7 @@ class ChatRequest(BaseModel):
 
     def params_fingerprint(self) -> str:
         """Parameters that must match for a cache hit to be valid (excludes prompt text)."""
-        return f"{self.model}|{self.temperature}|{self.max_tokens}|{self.top_p}|{self.stop}"
+        adapter = self.adapter_id or ""
+        return (
+            f"{self.model}|{adapter}|{self.temperature}|{self.max_tokens}|{self.top_p}|{self.stop}"
+        )

@@ -110,13 +110,16 @@ class GatewayService:
     ) -> ChatResponse:
         started_at = time.monotonic()
         tracing = TracingService(trace_id, self._database, self._trace_exporters)
+        request = await self._apply_adapter_route(request, tenant_id=tenant_id)
 
         with tracing.span("cache_lookup") as lookup_span:
             cached, cache_status = await self._cache_service.lookup(request, tenant_id=tenant_id)
         lookup_span.metadata["cache_status"] = cache_status.value
+        if request.adapter_id:
+            lookup_span.metadata["adapter_id"] = request.adapter_id
 
         if cached is not None:
-            result = self._stamp(cached, trace_id, cache_status, started_at)
+            result = self._stamp(cached, trace_id, cache_status, started_at, request=request)
             self._finalize(
                 request,
                 result,
@@ -137,7 +140,9 @@ class GatewayService:
                     request, tenant_id=tenant_id
                 )
                 if coalesced is not None:
-                    result = self._stamp(coalesced, trace_id, CacheStatus.EXACT_HIT, started_at)
+                    result = self._stamp(
+                        coalesced, trace_id, CacheStatus.EXACT_HIT, started_at, request=request
+                    )
                     self._finalize(
                         request,
                         result,
@@ -170,7 +175,7 @@ class GatewayService:
         if cache_status is not CacheStatus.BYPASSED:
             asyncio.create_task(self._schedule_backfill(request, response, tenant_id))  # noqa: RUF006
 
-        result = self._stamp(response, trace_id, cache_status, started_at)
+        result = self._stamp(response, trace_id, cache_status, started_at, request=request)
         self._finalize(
             request,
             result,
@@ -191,17 +196,20 @@ class GatewayService:
     ) -> AsyncIterator[str | StreamMetadata]:
         started_at = time.monotonic()
         tracing = TracingService(trace_id, self._database, self._trace_exporters)
+        request = await self._apply_adapter_route(request, tenant_id=tenant_id)
 
         with tracing.span("cache_lookup") as lookup_span:
             cached, cache_status = await self._cache_service.lookup(request, tenant_id=tenant_id)
         lookup_span.metadata["cache_status"] = cache_status.value
+        if request.adapter_id:
+            lookup_span.metadata["adapter_id"] = request.adapter_id
 
         if cached is not None:
             # Fast path: the full response is already known, so there's no
             # benefit to trickling it out token-by-token — one chunk still
             # satisfies clients consuming this as an SSE/streaming endpoint.
             yield cached.message.content
-            result = self._stamp(cached, trace_id, cache_status, started_at)
+            result = self._stamp(cached, trace_id, cache_status, started_at, request=request)
             yield StreamMetadata(response=result)
             self._finalize(
                 request,
@@ -261,6 +269,9 @@ class GatewayService:
             trace_id=trace_id,
             created_at=datetime.now(UTC),
             latency_ms=(time.monotonic() - started_at) * 1000,
+            adapter_id=request.adapter_id,
+            model_alias=request.model_alias,
+            adapter_stage=request.adapter_stage,
         )
         asyncio.create_task(  # noqa: RUF006 - deliberately fire-and-forget
             self._schedule_backfill(request, response, tenant_id)
@@ -377,20 +388,68 @@ class GatewayService:
             tenant_id=tenant_id,
         )
 
+    async def _apply_adapter_route(self, request: ChatRequest, *, tenant_id: str) -> ChatRequest:
+        """Remap model alias → base_model + adapter_id before cache/routing."""
+        if request.adapter_id and request.model_alias:
+            return request
+        if self._database is None:
+            return request
+        try:
+            tenant_uuid = uuid.UUID(tenant_id)
+        except ValueError:
+            return request
+
+        stage = request.adapter_stage  # None → canary-aware resolve
+        from llmops_gateway.persistence.repositories.adapter_route_repository import (
+            AdapterRouteRepository,
+        )
+
+        routing_key = f"{tenant_id}:{request.model}:{request.canonical_prompt()}"
+        try:
+            async with self._database.session() as session:
+                row = await AdapterRouteRepository(session).resolve_with_canary(
+                    tenant_id=tenant_uuid,
+                    model_alias=request.model,
+                    routing_key=routing_key,
+                    preferred_stage=stage,
+                )
+        except Exception as exc:  # noqa: BLE001 — routing must not fail closed on DB blips
+            logger.warning("adapter_route_lookup_failed", error=str(exc), tenant_id=tenant_id)
+            return request
+
+        if row is None:
+            return request
+        return request.model_copy(
+            update={
+                "model_alias": request.model,
+                "model": row.base_model,
+                "adapter_id": row.adapter_id,
+                "adapter_stage": row.stage,
+            }
+        )
+
     @staticmethod
     def _stamp(
-        response: ChatResponse, trace_id: str, cache_status: CacheStatus, started_at: float
+        response: ChatResponse,
+        trace_id: str,
+        cache_status: CacheStatus,
+        started_at: float,
+        *,
+        request: ChatRequest | None = None,
     ) -> ChatResponse:
         cost_usd = (
             0.0
             if cache_status in (CacheStatus.EXACT_HIT, CacheStatus.SEMANTIC_HIT)
             else response.cost_usd
         )
-        return response.model_copy(
-            update={
-                "trace_id": trace_id,
-                "cache_status": cache_status,
-                "latency_ms": (time.monotonic() - started_at) * 1000,
-                "cost_usd": cost_usd,
-            }
-        )
+        update: dict = {
+            "trace_id": trace_id,
+            "cache_status": cache_status,
+            "latency_ms": (time.monotonic() - started_at) * 1000,
+            "cost_usd": cost_usd,
+        }
+        if request is not None:
+            update["adapter_id"] = request.adapter_id
+            update["model_alias"] = request.model_alias
+            update["adapter_stage"] = request.adapter_stage
+        return response.model_copy(update=update)

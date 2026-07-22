@@ -193,3 +193,111 @@ async def create_pricing(
         effective_from=row.effective_from,
         effective_to=row.effective_to,
     )
+
+
+class AdapterRouteSummary(BaseModel):
+    id: str
+    tenant_id: str
+    model_alias: str
+    base_model: str
+    adapter_id: str
+    stage: str
+    enabled: bool
+    canary_percent: int = 0
+    created_at: datetime
+
+
+class UpsertAdapterRouteRequest(BaseModel):
+    model_alias: str = Field(min_length=1, max_length=128)
+    base_model: str = Field(min_length=1, max_length=128)
+    adapter_id: str = Field(min_length=1, max_length=255)
+    stage: str = Field(default="Production", max_length=32)
+    enabled: bool = True
+    canary_percent: int = Field(default=0, ge=0, le=100)
+    tenant_id: str | None = Field(
+        default=None,
+        description="Defaults to the authenticated principal's tenant.",
+    )
+
+
+@router.get("/adapter-routes", response_model=list[AdapterRouteSummary])
+async def list_adapter_routes(
+    principal: AuthenticatedPrincipal = Depends(get_authenticated_principal),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[AdapterRouteSummary]:
+    from llmops_gateway.persistence.repositories.adapter_route_repository import (
+        AdapterRouteRepository,
+    )
+
+    rows = await AdapterRouteRepository(session).list_for_tenant(uuid.UUID(principal.tenant_id))
+    return [
+        AdapterRouteSummary(
+            id=str(row.id),
+            tenant_id=str(row.tenant_id),
+            model_alias=row.model_alias,
+            base_model=row.base_model,
+            adapter_id=row.adapter_id,
+            stage=row.stage,
+            enabled=row.enabled,
+            canary_percent=int(row.canary_percent or 0),
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
+
+
+@router.put("/adapter-routes", response_model=AdapterRouteSummary)
+async def upsert_adapter_route(
+    payload: UpsertAdapterRouteRequest,
+    principal: AuthenticatedPrincipal = Depends(get_authenticated_principal),
+    session: AsyncSession = Depends(get_db_session),
+) -> AdapterRouteSummary:
+    from llmops_gateway.persistence.repositories.adapter_route_repository import (
+        AdapterRouteRepository,
+    )
+
+    tenant_id = uuid.UUID(payload.tenant_id or principal.tenant_id)
+    # Non-wildcard keys can only mutate their own tenant.
+    if "*" not in principal.scopes and str(tenant_id) != principal.tenant_id:
+        raise HTTPException(status_code=403, detail="Cannot mutate another tenant's routes")
+
+    row = await AdapterRouteRepository(session).upsert(
+        tenant_id=tenant_id,
+        model_alias=payload.model_alias,
+        base_model=payload.base_model,
+        adapter_id=payload.adapter_id,
+        stage=payload.stage,
+        enabled=payload.enabled,
+        canary_percent=payload.canary_percent,
+    )
+    return AdapterRouteSummary(
+        id=str(row.id),
+        tenant_id=str(row.tenant_id),
+        model_alias=row.model_alias,
+        base_model=row.base_model,
+        adapter_id=row.adapter_id,
+        stage=row.stage,
+        enabled=row.enabled,
+        canary_percent=int(row.canary_percent or 0),
+        created_at=row.created_at,
+    )
+
+
+@router.delete("/adapter-routes/{model_alias}", status_code=204)
+async def disable_adapter_route(
+    model_alias: str,
+    stage: str = "Production",
+    principal: AuthenticatedPrincipal = Depends(get_authenticated_principal),
+    session: AsyncSession = Depends(get_db_session),
+) -> None:
+    from llmops_gateway.persistence.repositories.adapter_route_repository import (
+        AdapterRouteRepository,
+    )
+
+    row = await AdapterRouteRepository(session).disable(
+        tenant_id=uuid.UUID(principal.tenant_id),
+        model_alias=model_alias,
+        stage=stage,
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Adapter route not found")
